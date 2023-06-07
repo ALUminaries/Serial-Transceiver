@@ -1,7 +1,23 @@
+import java.io.File
+
+fun main(args: Array<String>) {
+    val mr_bits = 4096 // bits for multiplier - change this
+
+
+    // don't change anything below this
+
+    val xcvr_bits = 2 * mr_bits
+
+    val bytes = xcvr_bits / 8
+
+    val clk_div_bits = 1
+
+    val content =
+"""
 -- Authors: Maxwell Phillips
 -- Copyright: Ohio Northern University, 2023.
 -- License: GPL v3
--- Description: Serial transceiver for use with 512-bit multiplier.
+-- Description: Serial transceiver for use with ${mr_bits}-bit multiplier.
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -14,7 +30,9 @@ entity transceiver is
     bits: integer := 8;
     clk_freq: integer := 100000000; -- board clk
     baud_rate: integer := 9600;
-    bytes: integer := 128; -- how many bytes to process/expect
+    bytes: integer := ${bytes}; -- how many bytes to process/expect
+    g_n: integer := ${mr_bits};  -- Input (multiplier) length is n
+    g_m: integer := ${mr_bits}   -- Input (multiplicand) length is m
   );
   port( 
     clk: in std_logic;
@@ -66,6 +84,30 @@ architecture behavioral of transceiver is
       serial_out: out std_logic
     );
   end component;
+  
+  -- component clk_wiz_0
+  --   port (
+  --     clk_in1: in std_logic;
+  --     reset: in std_logic;
+  --     locked: out std_logic;
+  --     clk_out1: out std_logic
+  --   );
+  -- end component;
+
+  component multiplier_${mr_bits}
+    port(
+      clk: in std_logic;
+      start: in std_logic;
+      reset: in std_logic;
+      mr: in std_logic_vector(g_n - 1 downto 0);
+      s_mr: in std_logic;
+      md: in std_logic_vector(g_m - 1 downto 0);
+      s_md: in std_logic;
+      prod: out std_logic_vector(g_n + g_m - 1 downto 0);
+      s_prod: out std_logic;
+      done: out std_logic
+    );
+  end component;
 
   -- rx controller handling
   signal rx_reset, rx_idle, rx_active, rx_done_sig: std_logic;
@@ -79,9 +121,9 @@ architecture behavioral of transceiver is
   constant DATA_REG_BITS: integer := bytes * bits;
   signal data_reg: std_logic_vector(DATA_REG_BITS - 1 downto 0);
   signal shift_data_reg, load_data_reg: std_logic;
-  -- attribute dont_touch: string;
-  -- attribute dont_touch of data_reg: signal is "true";
-  signal data_reg_processed: std_logic_vector(DATA_REG_BITS - 1 downto 0);
+--  attribute dont_touch: string;
+--  attribute dont_touch of data_reg: signal is "true";
+--  signal data_reg_processed: std_logic_vector(DATA_REG_BITS - 1 downto 0);
   signal start_processing, done_processing: std_logic := '0';
   
   -- counter to record number of bytes received or transmitted
@@ -90,12 +132,18 @@ architecture behavioral of transceiver is
   constant LOG_BYTES: integer := integer(round(ceil(log2(real(bytes)))));
   signal byte_counter: std_logic_vector(LOG_BYTES downto 0); 
   signal en_byte_counter, clr_byte_counter: std_logic;
+
+  -- internal multiplier data signals
+  signal s_mr, s_md, s_prod: std_logic;
+  signal mr_in: std_logic_vector(g_n - 1 downto 0);
+  signal md_in: std_logic_vector(g_m - 1 downto 0);
+  signal prod: std_logic_vector(g_n + g_m - 1 downto 0);
   
   -- clock divider
-  signal div_clk: std_logic;
+  signal div_clk, div_clk_valid: std_logic;
   signal hw_reset: std_logic;
-  signal div_clk_counter: std_logic_vector(0 downto 0);
-  constant DIV_CLK_MAX: std_logic_vector(0 downto 0) := (others => '1');
+  signal div_clk_counter: std_logic_vector(${clk_div_bits - 1} downto 0);
+  constant DIV_CLK_MAX: std_logic_vector(${clk_div_bits - 1} downto 0) := (others => '1');
     
 begin
 
@@ -116,9 +164,40 @@ begin
     ready => tx_ready,
     send => tx_send_sig
   );
+  
+--  c_div: clk_wiz_0 port map(
+--    clk_in1 => clk, 
+----    reset => hw_reset,
+--    reset => '0',
+--    locked => div_clk_valid, -- `locked` tells you if the output is valid
+--    clk_out1 => div_clk
+--  );
 
   -- clock divider
+  div_clk_valid <= '1';
   div_clk <= '1' when (div_clk_counter(div_clk_counter'left) = '1') else '0';
+  
+  
+  multiplier: multiplier_${mr_bits} port map (
+    clk => div_clk,
+    start => start_processing,
+    reset => hw_reset,
+    mr => mr_in,
+    s_mr => s_mr,
+    md => md_in,
+    s_md => s_md,
+    prod => prod,
+    s_prod => s_prod,
+    done => done_processing
+  );
+
+  -- input format, ex. 256-bit multiplier
+  -- Bit   511    510..256   255      254..0
+  -- Data [s_mr][multiplier][s_md][multiplicand]
+  s_mr <= data_reg(data_reg'left);
+  mr_in <= '0' & data_reg(data_reg'left - 1 downto g_m);
+  s_md <= data_reg(g_m - 1);
+  md_in <= '0' & data_reg(g_m - 2 downto 0);
 
   process (clk, reset) begin
     if (reset = '1') then
@@ -139,11 +218,11 @@ begin
       leds(7 downto byte_counter'left + 1) <= (others => '0');
       
       if (load_tx_reg = '1') then
-        tx_reg <= data_reg(data_reg'left downto data_reg'left - bits + 1);
+      tx_reg <= data_reg(data_reg'left downto data_reg'left - bits + 1);
       end if;
       
       if (load_data_reg = '1') then
-        data_reg <= data_reg_processed;
+        data_reg <= s_prod & prod(prod'left - 1 downto 0);
       elsif (shift_data_reg = '1') then
         data_reg <= data_reg(data_reg'left - bits downto 0) & rx_reg;
       end if;
@@ -182,6 +261,7 @@ begin
   shift_data_reg <= '1' when (state = RX_INC_BYTE or state = TX_INC_BYTE) else '0';
 
   clr_byte_counter <= '1' when (state = PROC_START or state = PROC_WAIT or state = PROC_DONE) else '0';
+  hw_reset <= not clr_byte_counter; -- this reset is active high. reset hw clock if not processing
   en_byte_counter <= '1' when (state = RX_INC_BYTE or state = TX_INC_BYTE) else '0';
 
   start_processing <= '1' when (state = PROC_START or state = PROC_WAIT) else '0';
@@ -219,15 +299,17 @@ begin
           next_state <= RX_DONE;
         end if;
       when PROC_START =>
-        next_state <= PROC_START;
+        if (div_clk_valid = '1') then
+          next_state <= PROC_WAIT;
+        else
+          next_state <= PROC_START;
+        end if;
       when PROC_WAIT =>
-        -- if (done_processing = '1') then 
-        --   next_state <= PROC_DONE;
-        -- else
-        --   next_state <= PROC_WAIT;
-        -- end if;
-        next_state <= PROC_DONE;
-        data_reg_processed <= not data_reg;
+        if (done_processing = '1') then 
+          next_state <= PROC_DONE;
+        else
+          next_state <= PROC_WAIT;
+        end if;
       when PROC_DONE =>
         next_state <= TX_LOAD;
       when TX_LOAD =>
@@ -257,3 +339,9 @@ begin
     end case;  
   end process;
 end architecture behavioral;
+""".trimIndent()
+
+    val file = File("mk6_xcvr_${xcvr_bits}b.vhd")
+
+    file.writeText(content)
+}
