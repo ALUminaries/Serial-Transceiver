@@ -24,7 +24,7 @@ Files required for the serial transceiver and hardware container:
 #### Structural Block Diagram
 Below is a simplified outline of the structure of the top-level module and submodules:
 
-![structure.png](https://github.com/ALUminaries/Two-Level-Multiplier/blob/main/Apex%20Block%20Diagram.png)
+![structure.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/Apex%20Block%20Diagram.png)
 
 #### Adding your Hardware
 This transceiver is designed to be generic, modular, compartmentalized, and easy to work with. You can add virtually any algorithm or hardware design into the processing stage by working with the provided hardware container template, `mk8_container_template.vhd`. The container provides a layer of abstraction from the transceiver, and has several ports to interface with the top-level component. Essentially, the transceiver passes a parallel input to the hardware once received serially, and takes a parallel output to transmit back. The top-level component facilitates this and provides access to buttons, dip switches, and LEDs for the aforementioned FPGA development boards. These files are documented enough that you should be able to easily customize the hardware container to your needs. You can also see a discrete example in our [Two Level Multiplier](https://www.github.com/ALUminaries/Two-Level-Multiplier).
