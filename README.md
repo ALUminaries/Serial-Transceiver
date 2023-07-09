@@ -54,3 +54,6 @@ The top-level component instantiates a Xilinx LogiCORE Clock Wizard 6.0 IP (MMCM
   - `clk_hw` at your desired frequency for your hardware.
     - The maximum frequency should be displayed on the right of the output clock table (scroll all the way to the right).
   - If not already enabled, enable the `reset` and `locked` ports for the MMCM, and ensure the reset is active high.
+
+### Using the Transceiver to Test Hardware
+The primary purpose of this transceiver is to compensate for FPGA IO constraints when testing high-precision hardware (anything above 32 bits quickly becomes problematic). On either of the two aforementioned boards (among others), the Micro-USB JTAG port can also be used to emulate a serial RS-232 protocol. Then, a terminal software such as [Realterm](https://sourceforge.net/projects/realterm/) can be used to send and receive data to verify hardware results.
