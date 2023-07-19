@@ -311,7 +311,7 @@ begin
   -- this reset is active high. reset hw clock if not processing or transmitting (the latter is to preserve state)
   -- this is also responsive to global async reset, since that sets state directly to idle (might take a cycle though)
   hw_reset <= '1' when (reset = '1' or init_reset = '1' or state = IDLE or state = RX_WAIT or
-                        state = RX_INC_BYTE or state = RXD_BYTE or state = RX_DONE);
+                        state = RX_INC_BYTE or state = RXD_BYTE or state = RX_DONE) else '0';
 
   -- load signal during PROC_START state
   hw_load <= '1' when (state = PROC_START) else '0';
