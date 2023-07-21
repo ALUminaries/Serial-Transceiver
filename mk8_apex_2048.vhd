@@ -191,9 +191,9 @@ architecture behavioral of apex is
   signal hw_reset         : std_logic;
   signal hw_load          : std_logic;
   signal hw_start         : std_logic;
-  signal hw_start_sync   : std_logic;
+  signal hw_start_sync    : std_logic;
   signal hw_done          : std_logic;
-  signal hw_done_sync    : std_logic;
+  signal hw_done_sync     : std_logic;
   signal hw_output        : std_logic_vector(G_total_bits - 1 downto 0);
   signal hw_leds          : std_logic_vector(15 downto 0);
   signal hw_override_leds : std_logic;

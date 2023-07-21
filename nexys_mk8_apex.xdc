@@ -8,7 +8,7 @@ set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports clk]
 create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports clk]
 
 ## Timing Constraints
-set_clock_groups -name sys_hw_group -asynchronous -group [get_clocks sys_clk_pin] -group [get_clocks -of_objects [get_pins c_div/inst/mmcm_adv_inst/CLKOUT1]]
+set_clock_groups -name sys_hw_group -asynchronous -group [get_clocks sys_clk_pin] -group [get_clocks -of_objects [get_pins hw_mmcm/inst/mmcm_adv_inst/CLKOUT1]]
 
 ## Switches
 set_property -dict { PACKAGE_PIN J15   IOSTANDARD LVCMOS33 } [get_ports {switches[0]}]
