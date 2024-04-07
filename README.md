@@ -1,5 +1,5 @@
 # VHDL Serial Transceiver
-This repository contains resources for implementing a serial transceiver (combined transmitter and receiver) for an FPGA using an emulated RS-232 interface over USB. It includes a customizable hardware container designed to allow insertion of any given hardware or algorithm into the serial pipeline.
+This repository contains resources for implementing a serial transceiver (combined transmitter and receiver) on an FPGA using UART over USB. It includes a customizable hardware container designed to allow the insertion of any given hardware or algorithm into the serial pipeline.
 
 ### Outline of Functionality
 1. Receiver module listens for incoming serial traffic
