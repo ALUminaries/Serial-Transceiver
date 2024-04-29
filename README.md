@@ -62,9 +62,10 @@ Below is a simplified outline of the structure of the top-level module and submo
 The individual receiver and transmitter submodules operate on one byte at a time, while the transceiver manages both at a multi-byte level.
 
 #### Transceiver State Diagram
-
+![xcvr-fsm.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/xcvr-fsm.png)
 
 #### Receiver State Diagram
-
+![rx-fsm.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/rx-fsm.png)
 
 #### Transmitter State Diagram
+![tx-fsm.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/tx-fsm.png)
