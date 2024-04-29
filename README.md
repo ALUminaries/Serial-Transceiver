@@ -65,7 +65,9 @@ The individual receiver and transmitter submodules operate on one byte at a time
 ![xcvr-fsm.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/xcvr-fsm.png)
 
 #### Receiver State Diagram
-![rx-fsm.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/rx-fsm.png)
+<img src="https://github.com/ALUminaries/Serial-Transceiver/blob/main/rx-fsm.png" width=50%>
 
 #### Transmitter State Diagram
-![tx-fsm.png](https://github.com/ALUminaries/Serial-Transceiver/blob/main/tx-fsm.png)
+<img src="https://github.com/ALUminaries/Serial-Transceiver/blob/main/tx-fsm.png" width=45%>
+
+
